@@ -15,7 +15,7 @@ NAV_ITEMS = {
 
 def interface():
     with gr.Blocks() as block:
-        mode = gr.State("generate_from_description") # 初始状态为第一个功能
+        mode = gr.State("None") # 初始状态
 
         with gr.Row():
             with gr.Column(scale=1, min_width=245, variant="compact"):
@@ -41,7 +41,24 @@ def interface():
             # toolbox
             with gr.Column():
                 gr.Markdown("### 🔧 功能区")
-                toolbox = gr.Blocks()
+
+                @gr.render(inputs=mode)
+                def render_toolbox(mode):
+                    print(mode)
+                    if mode == "从描述生成":
+                        GenerateFromDescription.get_block()
+                    elif mode == "代码补全":
+                        CodeCompletion.get_block()
+                    elif mode == "生成代码说明":
+                        GenerateCodeDocumentation.get_block()
+                    elif mode == "生成代码注释":
+                        GenerateCodeComments.get_block()
+                    elif mode == "错误修复":
+                        BugFixing.get_block()
+                    elif mode == "代码优化":
+                        CodeOptimization.get_block()
+                    elif mode == "测试用例生成及在线测试":
+                        TestCaseGeneration.get_block()
 
         for radio in radio_components:
             radio.select(
@@ -49,11 +66,11 @@ def interface():
                 inputs=radio,
                 outputs=radio_components,
             )
-            # radio.select(
-            #     fn=handle_radio_selection_for_toolbox,
-            #     inputs=radio,
-            #     outputs=toolbox,
-            # )
+            radio.select(
+                fn=lambda x: x,
+                inputs=radio,
+                outputs=mode,
+            )
 
 def handle_nav_selection_for_radios(selected_item): # 导航栏按钮选中事件的handler
     """处理导航选择事件：选中一个时自动取消其他分类的选择"""
@@ -67,7 +84,3 @@ def handle_nav_selection_for_radios(selected_item): # 导航栏按钮选中事�
 
 
     return radio_components_update
-
-# def handle_radio_selection_for_toolbox(selected_item):
-#     with gr.Blocks() as block:
-#         gr.Markdown("### bug_fixing功能区(待编写)")
