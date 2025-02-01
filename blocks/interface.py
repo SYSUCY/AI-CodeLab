@@ -6,6 +6,13 @@ from blocks.toolbox.code_enhancement import BugFixing, CodeOptimization
 from blocks.toolbox.code_testing import TestCaseGeneration
 # from blocks.toolbox import *
 
+NAV_ITEMS = {
+    "📝 代码生成": ["从描述生成", "代码补全"],
+    "🔍 代码解释": ["生成代码说明", "生成代码注释"],
+    "⚡ 代码增强": ["错误修复", "代码优化"],
+    "✅ 代码测试": ["测试用例生成及在线测试"]
+}
+
 def interface():
     with gr.Blocks() as block:
         mode = gr.State("generate_from_description") # 初始状态为第一个功能
@@ -13,41 +20,18 @@ def interface():
         with gr.Row():
             with gr.Column(scale=1, min_width=245, variant="compact"):
                 # left panel (navigation bar)
-                with gr.Blocks(theme="soft") as block:
-                    gr.Markdown("### 🧭 功能导航")
+                gr.Markdown("### 🧭 功能导航")
 
-                    with gr.Accordion("📝 代码生成", open=False):  # code generation
-                        with gr.Column(variant="panel"):
-                            btn1 = gr.Button("从描述生成")  # generate_from_description
-                            btn2 = gr.Button("代码补全")  # code_completion
+                radio_components = []
 
-                            btn1.click(fn=lambda: "generate_from_description", outputs=[mode])
-                            btn2.click(fn=lambda: "code_completion", outputs=[mode])
+                for category, items in NAV_ITEMS.items():
+                    radio = gr.Radio(
+                        choices=items,
+                        label=category,
+                    )
+                    radio_components.append(radio)
 
-                    with gr.Accordion("🔍 代码解释", open=False):  # code explanation
-                        with gr.Column(variant="panel"):
-                            btn3 = gr.Button("生成代码说明")  # generate_code_documentation
-                            btn4 = gr.Button("生成代码注释")  # generate_code_comments
-
-                            btn3.click(fn=lambda: "generate_code_documentation", outputs=[mode])
-                            btn4.click(fn=lambda: "generate_code_comments", outputs=[mode])
-
-                    with gr.Accordion("⚡ 代码增强", open=False):  # code enhancement
-                        with gr.Column(variant="panel"):
-                            btn5 = gr.Button("错误修复")  # bug_fixing
-                            btn6 = gr.Button("代码优化")  # code_optimization
-
-                            btn5.click(fn=lambda: "bug_fixing", outputs=[mode])
-                            btn6.click(fn=lambda: "code_optimization", outputs=[mode])
-
-                    with gr.Accordion("✅ 代码测试", open=False):  # code testing
-                        with gr.Column(variant="panel"):
-                            btn7 = gr.Button("测试用例生成及在线测试")  # test_case_generation
-
-                            btn7.click(fn=lambda: "test_case_generation", outputs=[mode])
-
-                    with gr.Row(variant="compact"):
-                        btn_config = gr.Button("⚙️ 设置", size="md")
+                btn_config = gr.Button("⚙️ 设置", size="md")
 
             with gr.Column(scale=9, min_width=800):
                 # code editor
@@ -57,20 +41,33 @@ def interface():
             # toolbox
             with gr.Column():
                 gr.Markdown("### 🔧 功能区")
+                toolbox = gr.Blocks()
 
-                @gr.render(inputs=mode)
-                def render_toolbox(mode):
-                    if mode == "generate_from_description":
-                        GenerateFromDescription.get_block()
-                    elif mode == "code_completion":
-                        CodeCompletion.get_block()
-                    elif mode == "generate_code_documentation":
-                        GenerateCodeDocumentation.get_block()
-                    elif mode == "generate_code_comments":
-                        GenerateCodeComments.get_block()
-                    elif mode == "bug_fixing":
-                        BugFixing.get_block()
-                    elif mode == "code_optimization":
-                        CodeOptimization.get_block()
-                    elif mode == "test_case_generation":
-                        TestCaseGeneration.get_block()
+        for radio in radio_components:
+            radio.select(
+                fn=handle_nav_selection_for_radios,
+                inputs=radio,
+                outputs=radio_components,
+            )
+            # radio.select(
+            #     fn=handle_radio_selection_for_toolbox,
+            #     inputs=radio,
+            #     outputs=toolbox,
+            # )
+
+def handle_nav_selection_for_radios(selected_item): # 导航栏按钮选中事件的handler
+    """处理导航选择事件：选中一个时自动取消其他分类的选择"""
+    radio_components_update = []
+
+    for item in NAV_ITEMS.items():
+        if selected_item in item[1]:
+            radio_components_update.append(gr.update(value=selected_item))
+        else:
+            radio_components_update.append(None)
+
+
+    return radio_components_update
+
+# def handle_radio_selection_for_toolbox(selected_item):
+#     with gr.Blocks() as block:
+#         gr.Markdown("### bug_fixing功能区(待编写)")
