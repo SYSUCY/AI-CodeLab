@@ -4,7 +4,7 @@ NAV_ITEMS = {
     "📝 代码生成": ["从描述生成", "代码补全"],
     "🔍 代码解释": ["生成代码说明", "生成代码注释"],
     "⚡ 代码增强": ["错误修复", "代码优化"],
-    "✅ 代码测试": ["测试用例生成及在线测试"]
+    "✅ 代码测试": ["测试用例生成"]
 }
 
 def interface():
@@ -25,10 +25,16 @@ def interface():
 
                 btn_config = gr.Button("⚙️ 设置", size="md")
 
+                btn_upload = gr.Button("上传代码文件", variant="primary", size="md")
+
+                btn_download = gr.Button("下载代码文件", variant="primary", size="md")
+
             with gr.Column(scale=9, min_width=800):
+                with gr.Row():
+                    lang_selector = gr.Dropdown(label="请选择编程语言")
+                    model_selector = gr.Dropdown(label="请选择使用的模型")
                 # code editor
-                with gr.Blocks() as block:
-                    gr.Code()
+                gr.Code()
         with gr.Row():
             # toolbox
             with gr.Column():
