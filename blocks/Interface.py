@@ -114,7 +114,7 @@ class Interface:
             lang_selector = self.get_language()
             btn_code_generate.click(
                 fn=self.handle_generate_code,
-                inputs=[user_input_box, code_input_box, model_selector, lang_selector],
+                inputs=[user_input_box, code_input_box],
                 outputs=[output_code_box]
             )
             #test
@@ -190,17 +190,17 @@ class Interface:
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
 
-    def handle_generate_code(user_input, code_input, model_selection="DeepSeek-R1-Distill-Qwen-32B",
-                             lang_selection="Python"):
+    def handle_generate_code(user_input, code_input):
         """
         处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
         :param user_input: Textbox 中的用户输入的自然语言描述
         :param code_input: Code 中的待补全代码
-        :param model_selection: 选择的模型
         :return: 生成的代码
         """
         prompt = ""
         method = interface.get_feature()
+        model_selection = interface.get_model()
+        lang_selection = interface.get_language()
 
         if method == "从描述生成":
             prompt = f"以下是自然语言描述:\n" \
