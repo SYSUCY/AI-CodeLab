@@ -34,7 +34,7 @@ def interface():
                     lang_selector = gr.Dropdown(label="请选择编程语言")
                     model_selector = gr.Dropdown(label="请选择使用的模型")
                 # code editor
-                gr.Code(lines=30)
+                gr.Code(lines=30, max_lines=30)
         with gr.Row():
             # toolbox
             with gr.Column():
