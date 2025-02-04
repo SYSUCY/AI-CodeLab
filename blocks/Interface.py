@@ -190,4 +190,50 @@ class Interface:
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
 
+    def handle_generate_code(user_input, code_input, model_selection="DeepSeek-R1-Distill-Qwen-32B",
+                             lang_selection="Python"):
+        """
+        处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
+        :param user_input: Textbox 中的用户输入的自然语言描述
+        :param code_input: Code 中的待补全代码
+        :param model_selection: 选择的模型
+        :return: 生成的代码
+        """
+        prompt = ""
+        method = interface.get_feature()
+
+        if method == "从描述生成":
+            prompt = f"以下是自然语言描述:\n" \
+                     f"{user_input}\n" \
+                     f"根据上述描述，生成相应的{lang_selection}代码，并且使用特定的标记包裹代码部分。\n" \
+                     f"请确保代码被标记为代码块，并且其外部标记如下:\n" \
+                     f"<code> ... </code>"
+
+        elif method == "代码补全":
+            prompt = f"以下是自然语言描述:\n" \
+                     f"{user_input}\n" \
+                     f"以下是待补全的代码:\n" \
+                     f"{code_input}\n" \
+                     f"根据上述描述和待补全的代码，生成完整的{lang_selection}代码，并且使用特定的标记包裹代码部分。\n" \
+                     f"请确保代码被标记为代码块，并且其外部标记如下:\n" \
+                     f"<code> ... </code>"
+
+        # 调用 ChatUI 进行流式生成
+        response = ""
+        for chunk in chat_ui.gradio_interface(model_selection, prompt):
+            response += chunk  # 累加生成的代码
+
+        # 提取 <code> 和 </code> 标签之间的部分作为最终返回值
+        start_index = response.find("<code>") + len("<code>")
+        end_index = response.find("</code>", start_index)
+
+        # 如果找到了 <code> 和 </code>，返回其中的内容
+        if start_index != -1 and end_index != -1:
+            final_code = response[start_index:end_index]
+        else:
+            final_code = response  # 如果没有找到，返回原始响应（可能需要处理错误情况）
+
+        return final_code
+
+chat_ui = ChatUI()
 interface = Interface()
