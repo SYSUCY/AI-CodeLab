@@ -1,0 +1,118 @@
+[33mcommit d6592a26e4dbcdbf48c88c9eb3f7813221d560c8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mty-feature[m[33m)[m
+Author: 王心怡正牌男友 <ty2434519917@foxmail.com>
+Date:   Tue Feb 4 15:25:07 2025 +0800
+
+    Initial commit
+
+[33mcommit 9b83ef800de865954f55f52dd75c501c59ef02cf[m[33m ([m[1;31morigin/ty-feature[m[33m)[m
+Author: 王心怡正牌男友 <ty2434519917@foxmail.com>
+Date:   Tue Feb 4 15:12:04 2025 +0800
+
+    add code_generation part code
+
+[33mcommit a24743e439b27b90140da241e5eb4f12c3d33786[m
+Author: 王心怡正牌男友 <ty2434519917@foxmail.com>
+Date:   Tue Feb 4 15:11:23 2025 +0800
+
+    add code_generation part code
+
+[33mcommit 368db2e30354d9bbc0c0174dbadc5d0d7cf443a0[m
+Author: 王心怡正牌男友 <ty2434519917@foxmail.com>
+Date:   Tue Feb 4 14:47:59 2025 +0800
+
+    add code_generation part code
+
+[33mcommit f2bf035e42cd78f28eeaa309fe7bd757cc8003be[m
+Author: 王心怡正牌男友 <ty2434519917@foxmail.com>
+Date:   Tue Feb 4 11:29:55 2025 +0800
+
+    add code_generation part code
+
+[33mcommit 44f8266ec06f0d6a65c6c53bb4ee9e885ba0a490[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 4d8ee04 b0ba369
+Author: Mark.G <108460626+Cry-StalL@users.noreply.github.com>
+Date:   Mon Feb 3 15:18:54 2025 +0800
+
+    Merge pull request #1 from Cry-StalL/model-selection
+    
+    简单的流式输出demo，提供通用流式输出接口
+
+[33mcommit b0ba36936eb5d561699c03df4eca7b139e5f9e46[m
+Author: Cortantse <xuzhj33@mail2.sysu.edu.cn>
+Date:   Mon Feb 3 12:56:36 2025 +0800
+
+    简单的流式输出demo，提供通用流式输出接口
+
+[33mcommit 4d8ee04f21c6cc649f957ba4246ad0af60232a88[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sun Feb 2 15:21:19 2025 +0800
+
+    通过lines参数修改代码编辑器初始大小
+
+[33mcommit 2ff87ed0b809860f7fbd1a590a944a1ec80f2fbb[m
+Merge: 2037776 8537068
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sun Feb 2 14:35:00 2025 +0800
+
+    Merge remote-tracking branch 'origin/master'
+
+[33mcommit 2037776bef266ae6a94d452923a7673ed6148353[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sun Feb 2 14:32:57 2025 +0800
+
+    添加按钮和下拉框
+
+[33mcommit 8537068c6ebdfbaca8d082b458fd23a9e0155b6e[m
+Author: Mark.G <108460626+Cry-StalL@users.noreply.github.com>
+Date:   Sun Feb 2 14:14:56 2025 +0800
+
+    Update README.md
+
+[33mcommit bcda599600a79cc4858aa9292b32a446d6d5a4d5[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sun Feb 2 14:10:10 2025 +0800
+
+    暂时删除功能区切换相关代码
+
+[33mcommit b19958c528ec6e101e540bf9ce079570cab8c925[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sat Feb 1 19:40:49 2025 +0800
+
+    完成导航栏(radio按钮版本)对应的工具区切换
+
+[33mcommit 92819afd3f67e16b129433909ee3f5d687fc6550[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sat Feb 1 16:58:02 2025 +0800
+
+    将导航栏改为radio按钮
+
+[33mcommit 7f021b379c22375e9df12afcee7e58c90bf20064[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Sat Feb 1 11:52:53 2025 +0800
+
+    界面框架搭建完毕
+
+[33mcommit 437c628246af0b1057710b96f7e1f7ec5272deb1[m
+Merge: 944082f 040274c
+Author: Cry-StalL <940755868@qq.com>
+Date:   Fri Jan 31 15:10:23 2025 +0800
+
+    Merge branch 'master' of http://www.modelscope.cn/studios/Marco567/AI-CodeLab
+
+[33mcommit 040274ca38621a89280d9cd768cfc6b9aa3f83b3[m
+Author: Administrator <yuanfu.yf@alibaba-inc.com>
+Date:   Fri Jan 31 07:00:44 2025 +0000
+
+    System update meta information
+
+[33mcommit 857e56e05ce482c204dc0867489176d1aace719e[m
+Author: Administrator <yuanfu.yf@alibaba-inc.com>
+Date:   Fri Jan 31 07:00:44 2025 +0000
+
+    System init .gitattributes
+
+[33mcommit 944082f8b938e952e9fbcac805527d97d701467b[m
+Author: Cry-StalL <940755868@qq.com>
+Date:   Fri Jan 31 14:58:07 2025 +0800
+
+    init
