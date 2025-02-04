@@ -199,11 +199,6 @@ def main():
     主函数：启动Gradio界面进行测试
     注意：请勿在生产环境中直接暴露API密钥
     """
-<<<<<<< HEAD
-    os.environ["GITEE_API_KEY"] = "7IZQCLFXGS4RNWRDUZW5L3FKQXJOZRWMEDQS3I1P"
-    os.environ["DASHSCOPE_API_KEY"] = "sk-ff05d1133ae047d6bb221b18755984f4"
-=======
->>>>>>> 16c288ee43552c7930c48ef4882389f9e2ac4202
 
     chat_ui = ChatUI()
     demo = chat_ui.create_interface()
