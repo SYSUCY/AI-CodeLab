@@ -1,9 +1,9 @@
 import gradio as gr
-from blocks.interface import interface
+from blocks.Interface import interface
 
 def main():
     with gr.Blocks() as app:
-        interface()
+        interface.create()
 
     app.launch()
 
