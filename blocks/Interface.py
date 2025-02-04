@@ -8,7 +8,6 @@ class Interface:
             "⚡ 代码增强": ["错误修复", "代码优化"],
             "✅ 代码测试": ["测试用例生成"]
         }
-
         # 下面包含了Gradio中Code组件支持的所有语言
         self._lang_map = {
             # 通用编程语言
@@ -46,6 +45,12 @@ class Interface:
             'Spark SQL': 'sql-sparkSQL',
             'Esper EPL': 'sql-esper'
         }
+        self._model_list = [
+            "DeepSeek-R1-Distill-Qwen-32B",
+            "qwen-max",
+            "qwen-plus",
+            "qwen-turbo",
+        ]
 
         # 控件
         self.btn_config = None
@@ -54,6 +59,11 @@ class Interface:
         self.model_selector = None
         self.editor = None
         self.nav_radio_components = []  # 左侧导航栏的所有radio控件
+
+        # 存储当前界面状态
+        self.selected_feature = ""
+        self.selected_language = ""
+        self.selected_model = ""
 
     #---------------- 公有接口-----------------#
     def create(self):
@@ -80,7 +90,8 @@ class Interface:
                     with gr.Row():
                         self.lang_selector = gr.Dropdown(label="请选择编程语言", choices=list(self._lang_map.keys()),
                                                     interactive=True, filterable=True, value=None)
-                        self.model_selector = gr.Dropdown(label="请选择使用的模型")
+                        self.model_selector = gr.Dropdown(label="请选择使用的模型", choices=self._model_list,
+                                                          interactive=True, filterable=True, value=None)
                     # code editor
                     self.editor = gr.Code(lines=30, max_lines=30, interactive=True)
             with gr.Row():
@@ -101,18 +112,46 @@ class Interface:
                 outputs=self.editor,
             )
 
-    def get_feature(self):
-        return
+            self.model_selector.change(
+                fn=self._handle_model_selection,
+                inputs=self.model_selector,
+            )
 
-    def get_language(self):
-        return
+    def get_feature(self) -> str:
+        """
+        获取用户当前在左侧导航栏选择的功能名称（与界面上的文本相同，是中文）。
 
-    def get_model(self):
-        return
+        Returns:
+            str: 当前选择的功能名称。
+            未选择功能时，返回空字符串。
+        """
+        return self.selected_feature
+
+    def get_language(self) -> str:
+        """
+        获取用户当前选择的编程语言名称（与界面上的文本相同）。
+
+        Returns:
+            str: 当前选择的编程语言名称。
+            未选择编程语言时，返回空字符串。
+        """
+        return self.selected_language
+
+    def get_model(self) -> str:
+        """
+        获取用户当前选择的模型名称（与界面上的文本相同）。
+
+        Returns:
+            str: 当前选择的模型名称。
+            未选择模型时，返回空字符串。
+        """
+        return self.selected_model
 
     # ----------------私有方法-----------------#
-    def _handle_nav_selection(self, selected_item):  # 导航栏按钮选中事件的handler
+    def _handle_nav_selection(self, selected_item: str):  # 导航栏按钮选中事件的handler
         """处理导航选择事件：选中一个时自动取消其他分类的选择"""
+        self.selected_feature = selected_item
+
         radio_components_update = []
 
         for item in self._nav_items.items():
@@ -123,7 +162,12 @@ class Interface:
 
         return radio_components_update
 
-    def _handle_lang_selection(self, selected_item):
+    def _handle_lang_selection(self, selected_item: str):
+        self.selected_language = selected_item
+
         return gr.update(language=self._lang_map[selected_item])
+
+    def _handle_model_selection(self, selected_item: str):
+        self.selected_model = selected_item
 
 interface = Interface()
