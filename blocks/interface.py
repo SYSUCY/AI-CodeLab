@@ -27,8 +27,6 @@ def interface():
 
                 btn_upload = gr.Button("上传代码文件", variant="primary", size="md")
 
-                btn_download = gr.Button("下载代码文件", variant="primary", size="md")
-
             with gr.Column(scale=9, min_width=800):
                 with gr.Row():
                     lang_selector = gr.Dropdown(label="请选择编程语言")
