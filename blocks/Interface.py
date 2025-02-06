@@ -1,4 +1,5 @@
 import gradio as gr
+from gradio_codeextend import CodeExtend as gr_CodeExtend
 
 class Interface:
     def __init__(self):
@@ -14,21 +15,32 @@ class Interface:
             'Python': 'python',
             'C': 'c',
             'C++': 'cpp',
+            'Go': 'go',
+            'Java': 'java',
             'R': 'r',
+            'Rust': 'rust',
 
-            # 标记语言/数据格式
-            'Markdown': 'markdown',
-            'JSON': 'json',
+            # Web前端
             'HTML': 'html',
             'CSS': 'css',
-            'YAML': 'yaml',
+            'SCSS': 'scss',
+            'Vue': 'vue',
+
+            # 标记语言/数据格式
             'Dockerfile': 'dockerfile',
+            'Liquid': 'liquid',
+            'Markdown': 'markdown',
+            'JSON': 'json',
+            'XML': 'xml',
+            'YAML': 'yaml',
+
 
             # 脚本语言
+            'Batch(Shell)': 'shell',
             'JavaScript': 'javascript',
-            'TypeScript': 'typescript',
-            'Shell': 'shell',
             'Jinja2': 'jinja2',
+            'PHP': 'php',
+            'TypeScript': 'typescript',
 
             # SQL及其方言
             'SQL': 'sql',
@@ -93,7 +105,7 @@ class Interface:
                         self.model_selector = gr.Dropdown(label="请选择使用的模型", choices=self._model_list,
                                                           interactive=True, filterable=True, value=None)
                     # code editor
-                    self.editor = gr.Code(lines=30, max_lines=30, interactive=True)
+                    self.editor = gr_CodeExtend(lines=30, max_lines=30, interactive=True)
             with gr.Row():
                 # toolbox
                 with gr.Column():
