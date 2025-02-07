@@ -57,6 +57,9 @@ class Interface:
             'Spark SQL': 'sql-sparkSQL',
             'Esper EPL': 'sql-esper'
         }
+        self._lang_support_execution = {
+            'Python',
+        }
         self._model_list = [
             "DeepSeek-R1-Distill-Qwen-32B",
             "qwen-max",
@@ -71,6 +74,8 @@ class Interface:
         self.model_selector = None
         self.editor = None
         self.nav_radio_components = []  # 左侧导航栏的所有radio控件
+        self.run_button = None
+        self.code_output_box = None
 
         # 存储当前界面状态
         self.selected_feature = ""
@@ -96,7 +101,7 @@ class Interface:
 
                     self.btn_config = gr.Button("⚙️ 设置", size="md")
 
-                    self.btn_upload = gr.Button("上传代码文件", variant="primary", size="md")
+                    self.btn_upload = gr.Button("上传代码文件", size="md")
 
                 with gr.Column(scale=9, min_width=800):
                     with gr.Row():
@@ -105,7 +110,11 @@ class Interface:
                         self.model_selector = gr.Dropdown(label="请选择使用的模型", choices=self._model_list,
                                                           interactive=True, filterable=True, value=None)
                     # code editor
-                    self.editor = gr_CodeExtend(lines=30, max_lines=30, interactive=True)
+                    with gr.Row():
+                        self.editor = gr_CodeExtend(lines=27, max_lines=27, interactive=True)
+                    with gr.Row():
+                        self.run_button = gr.Button(value="运行代码", variant="primary")
+                        self.code_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8, max_lines=8, show_label=True, show_copy_button=True)
             with gr.Row():
                 # toolbox
                 with gr.Column():
@@ -121,7 +130,7 @@ class Interface:
             self.lang_selector.change(
                 fn=self._handle_lang_selection,
                 inputs=self.lang_selector,
-                outputs=self.editor,
+                outputs=[self.editor, self.run_button],
             )
 
             self.model_selector.change(
@@ -177,7 +186,14 @@ class Interface:
     def _handle_lang_selection(self, selected_item: str):
         self.selected_language = selected_item
 
-        return gr.update(language=self._lang_map[selected_item])
+        code_update = gr.update(language=self._lang_map[selected_item])
+
+        if self.get_language() in self._lang_support_execution:
+            run_btn_update = gr.update(interactive=True, value="运行代码")
+        else:
+            run_btn_update = gr.update(interactive=False, value="该语言暂不支持在线运行")
+
+        return code_update, run_btn_update
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
