@@ -74,7 +74,7 @@ class Interface:
 
         # 代码增强部分
         self.btn_code_augment = None # 代码增强按钮
-        self.output_area = None # 输出区域
+        self.code_augment_output_area = None # 输出区域
 
     #---------------- 公有接口-----------------#
     def create(self):
@@ -112,7 +112,7 @@ class Interface:
             with gr.Row():
                 self.btn_code_augment = gr.Button(value ="代码增强", variant="primary")
             with gr.Row(): # 输出区域
-                self.output_area = gr.Markdown("# 代码增强结果")
+                self.code_augment_output_area = gr.Markdown("# 代码增强结果")
 
             for radio in self.nav_radio_components:
                 radio.select(
@@ -135,7 +135,7 @@ class Interface:
             self.btn_code_augment.click(
                 fn=self._handle_code_augment,
                 inputs=self.editor,
-                outputs=self.output_area,
+                outputs=self.code_augment_output_area,
             )
 
     def get_feature(self) -> str:

@@ -82,7 +82,7 @@ def generate_prompt(task, language, code):
             {structured_guidelines['代码优化']['example']}
 
             最后请给出：
-            ### 完整优化代码
+            ### 完整优化的重构代码
             整合所有优化的最终代码（用```标记）"""
     }
 
