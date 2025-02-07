@@ -72,6 +72,7 @@ class Interface:
         self.selected_language = ""
         self.selected_model = ""
 
+        # 代码增强部分
         self.btn_code_augment = None # 代码增强按钮
         self.output_area = None # 输出区域
 
@@ -132,7 +133,7 @@ class Interface:
             )
 
             self.btn_code_augment.click(
-                fn=self._handle_run,
+                fn=self._handle_code_augment,
                 inputs=self.editor,
                 outputs=self.output_area,
             )
@@ -190,7 +191,7 @@ class Interface:
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
 
-    def _handle_run(self, code):
+    def _handle_code_augment(self, code):
         chat_client = ChatClient()
         model_provider_map = {
             "DeepSeek-R1-Distill-Qwen-32B": "gitee",
