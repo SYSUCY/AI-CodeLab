@@ -5,9 +5,12 @@ if not is_package_installed("gradio_codeextend"):
 
 import gradio as gr
 from blocks.Interface import interface
+from core.code_execution.setup_docker import setup_docker
 
 
 def main():
+    setup_docker()
+
     with gr.Blocks() as app:
         interface.create()
 
