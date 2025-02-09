@@ -28,7 +28,7 @@ def is_docker_installed():
             return False
     except FileNotFoundError:
         print("Docker is not installed")
-        return false
+        return False
 
 # Windows系统下，提示用户安装 Docker Desktop
 def prompt_for_docker_in_windows():
