@@ -60,6 +60,8 @@ class Interface:
         }
         self._lang_support_execution = {
             'Python',
+            'C',
+            'C++',
         }
         self._model_list = [
             "DeepSeek-R1-Distill-Qwen-32B",
