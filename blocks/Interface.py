@@ -1,5 +1,6 @@
 import gradio as gr
 from chat import ChatUI
+from chat import ChatClient
 from gradio_codeextend import CodeExtend as gr_CodeExtend
 from core.code_execution.run_code import run_code
 
@@ -157,9 +158,9 @@ class Interface:
 
             self.nav_radio_components[0].select(
                 # "代码生成"选择按钮
-                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)],
+                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")],
                 inputs=self.nav_radio_components[0],
-                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box, self.btn_llm_run],
             )
 
             self.nav_radio_components[1].select(
@@ -181,15 +182,15 @@ class Interface:
             )
 
             self.run_button.click(
-                fn=self._handle_run_button_click,
+                fn=self._handle_code_run_button_click,
                 inputs=self.editor,
                 outputs=self.code_execute_output_box
             )
 
             self.btn_llm_run.click(
-                fn=self._handle_generate_code,
+                fn=self._handle_llm_run_button_click,
                 inputs=[self.llm_text_input_box, self.llm_code_input_box],
-                outputs=[self.llm_code_output_box]
+                outputs=[self.llm_text_output_box, self.llm_code_output_box],
             )
 
     def get_feature(self) -> str:
@@ -253,6 +254,12 @@ class Interface:
         self.selected_model = selected_item
 
 
+    def _handle_llm_run_button_click(self, text_input, code_input):
+        selected_feature = self.get_feature()
+
+        if selected_feature == "从描述生成" or selected_feature == "代码补全":
+            return None, self._handle_generate_code(text_input, code_input)
+
     def _handle_generate_code(self, user_input, code_input):
         """
         处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
@@ -282,9 +289,12 @@ class Interface:
                      f"<code> ... </code>"
 
         # 调用 ChatUI 进行流式生成
+        chat_client = ChatClient()
+        context = [{"role": "user", "content": prompt}]
+
         response = ""
-        for chunk in chat_ui.gradio_interface(model_selection, prompt):
-            response += chunk  # 累加生成的代码
+        for chunk in chat_client.stream_chat(self._model_provider_map[model_selection], model_selection, context):
+            response += chunk
 
         # 提取 <code> 和 </code> 标签之间的部分作为最终返回值
         start_index = response.find("<code>") + len("<code>")
@@ -298,7 +308,7 @@ class Interface:
 
         return final_code
 
-    def _handle_run_button_click(self, code):
+    def _handle_code_run_button_click(self, code):
         result = run_code(self.get_language(), code)
 
         # 如果有错误，直接返回错误信息
@@ -311,5 +321,4 @@ class Interface:
 
         return None
 
-chat_ui = ChatUI()
 interface = Interface()
