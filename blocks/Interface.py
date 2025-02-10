@@ -1,8 +1,13 @@
+from cProfile import label
+
 import gradio as gr
+from pydantic.v1.utils import get_model
+from augment import generate_prompt
 from chat import ChatUI
 from chat import ChatClient
 from gradio_codeextend import CodeExtend as gr_CodeExtend
 from core.code_execution.run_code import run_code
+
 
 class Interface:
     def __init__(self):
@@ -104,6 +109,10 @@ class Interface:
         self.selected_language = ""
         self.selected_model = ""
 
+        # 代码增强部分
+        self.btn_code_augment = None # 代码增强按钮
+        self.code_augment_output_area = None # 输出区域
+
     #---------------- 公有接口-----------------#
     def create(self):
         with gr.Blocks() as block:
@@ -146,6 +155,15 @@ class Interface:
                 self.llm_text_output_box = gr.Textbox(visible=False, interactive=False, lines=25)
                 self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
             with gr.Row():
+
+                # toolbox
+           #     with gr.Column():
+           #        gr.Markdown("### 🔧 功能区")
+           #with gr.Row():
+           #    self.btn_code_augment = gr.Button(value ="代码增强", variant="primary")
+           #with gr.Row(): # 输出区域
+           #    self.code_augment_output_area = gr.Markdown("# 代码增强结果")
+
                 self.btn_llm_run = gr.Button(visible=False, variant="primary", size="md")
 
 
@@ -181,16 +199,23 @@ class Interface:
                 inputs=self.model_selector,
             )
 
+            
             self.run_button.click(
                 fn=self._handle_code_run_button_click,
                 inputs=self.editor,
                 outputs=self.code_execute_output_box
             )
-
+ 
             self.btn_llm_run.click(
                 fn=self._handle_llm_run_button_click,
                 inputs=[self.llm_text_input_box, self.llm_code_input_box],
                 outputs=[self.llm_text_output_box, self.llm_code_output_box],
+            )
+  
+            self.btn_code_augment.click(
+                fn=self._handle_code_augment,
+                inputs=self.editor,
+                outputs=self.code_augment_output_area,
             )
 
     def get_feature(self) -> str:
@@ -252,6 +277,27 @@ class Interface:
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
+
+    def _handle_code_augment(self, code):
+        chat_client = ChatClient()
+        model_provider_map = {
+            "DeepSeek-R1-Distill-Qwen-32B": "gitee",
+            "qwen-max": "aliyuncs",
+            "qwen-plus": "aliyuncs",
+            "qwen-turbo": "aliyuncs"
+        }
+        prompt = generate_prompt(self.get_feature(), self.get_language(), code)
+
+        # 根据模型自动选择提供商
+        provider = model_provider_map.get(self.get_model())
+        if not provider:
+            raise ValueError(f"不支持的模型: {self.get_model()}")
+
+        context = [{"role": "user", "content": prompt}]
+        response = ""
+        for chunk in chat_client.stream_chat(provider, self.get_model(), context):
+            response += chunk
+            yield response
 
 
     def _handle_llm_run_button_click(self, text_input, code_input):
