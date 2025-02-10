@@ -102,16 +102,15 @@ class Interface:
         self.llm_text_output_box = None
         self.llm_code_input_box = None
         self.llm_code_output_box = None
-        self.btn_llm_run = None
+
+        self.btn_code_generate = None
+        self.btn_code_augment = None
 
         # 存储当前界面状态
         self.selected_feature = ""
         self.selected_language = ""
         self.selected_model = ""
 
-        # 代码增强部分
-        self.btn_code_augment = None # 代码增强按钮
-        self.code_augment_output_area = None # 输出区域
 
     #---------------- 公有接口-----------------#
     def create(self):
@@ -152,19 +151,11 @@ class Interface:
             with gr.Row():
                 self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=25)
                 self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
-                self.llm_text_output_box = gr.Textbox(visible=False, interactive=False, lines=25)
+                self.llm_text_output_box = gr.Markdown("## 大模型输出区域")
                 self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
             with gr.Row():
-
-                # toolbox
-           #     with gr.Column():
-           #        gr.Markdown("### 🔧 功能区")
-           #with gr.Row():
-           #    self.btn_code_augment = gr.Button(value ="代码增强", variant="primary")
-           #with gr.Row(): # 输出区域
-           #    self.code_augment_output_area = gr.Markdown("# 代码增强结果")
-
-                self.btn_llm_run = gr.Button(visible=False, variant="primary", size="md")
+                self.btn_code_generate = gr.Button(value="代码生成", variant="primary")
+                self.btn_code_augment = gr.Button(value="代码增强", variant="primary")
 
 
             for radio in self.nav_radio_components:
@@ -176,14 +167,19 @@ class Interface:
 
             self.nav_radio_components[0].select(
                 # "代码生成"选择按钮
-                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")],
+                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")],
                 inputs=self.nav_radio_components[0],
-                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box, self.btn_llm_run],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
             )
-
             self.nav_radio_components[1].select(
                 # "代码解释"选择按钮
                 fn=lambda x: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=True), gr.update(visible=False)] if x=="生成代码说明" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)],
+                inputs=self.nav_radio_components[1],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
+            )
+            self.nav_radio_components[2].select(
+                # "代码增强"选择按钮
+                fn=lambda x: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
                 inputs=self.nav_radio_components[1],
                 outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
             )
@@ -193,7 +189,6 @@ class Interface:
                 inputs=self.lang_selector,
                 outputs=[self.editor, self.run_button],
             )
-
             self.model_selector.change(
                 fn=self._handle_model_selection,
                 inputs=self.model_selector,
@@ -205,17 +200,16 @@ class Interface:
                 inputs=self.editor,
                 outputs=self.code_execute_output_box
             )
- 
-            self.btn_llm_run.click(
-                fn=self._handle_llm_run_button_click,
+
+            self.btn_code_generate.click(
+                fn=self._handle_generate_code,
                 inputs=[self.llm_text_input_box, self.llm_code_input_box],
-                outputs=[self.llm_text_output_box, self.llm_code_output_box],
+                outputs=self.llm_code_output_box
             )
-  
             self.btn_code_augment.click(
                 fn=self._handle_code_augment,
                 inputs=self.editor,
-                outputs=self.code_augment_output_area,
+                outputs=self.llm_text_output_box,
             )
 
     def get_feature(self) -> str:
@@ -278,34 +272,6 @@ class Interface:
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
 
-    def _handle_code_augment(self, code):
-        chat_client = ChatClient()
-        model_provider_map = {
-            "DeepSeek-R1-Distill-Qwen-32B": "gitee",
-            "qwen-max": "aliyuncs",
-            "qwen-plus": "aliyuncs",
-            "qwen-turbo": "aliyuncs"
-        }
-        prompt = generate_prompt(self.get_feature(), self.get_language(), code)
-
-        # 根据模型自动选择提供商
-        provider = model_provider_map.get(self.get_model())
-        if not provider:
-            raise ValueError(f"不支持的模型: {self.get_model()}")
-
-        context = [{"role": "user", "content": prompt}]
-        response = ""
-        for chunk in chat_client.stream_chat(provider, self.get_model(), context):
-            response += chunk
-            yield response
-
-
-    def _handle_llm_run_button_click(self, text_input, code_input):
-        selected_feature = self.get_feature()
-
-        if selected_feature == "从描述生成" or selected_feature == "代码补全":
-            return None, self._handle_generate_code(text_input, code_input)
-
     def _handle_generate_code(self, user_input, code_input):
         """
         处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
@@ -353,6 +319,22 @@ class Interface:
             final_code = response  # 如果没有找到，返回原始响应（可能需要处理错误情况）
 
         return final_code
+
+    def _handle_code_augment(self, code):
+        chat_client = ChatClient()
+
+        prompt = generate_prompt(self.get_feature(), self.get_language(), code)
+
+        # 根据模型自动选择提供商
+        provider = self._model_provider_map.get(self.get_model())
+        if not provider:
+            raise ValueError(f"不支持的模型: {self.get_model()}")
+
+        context = [{"role": "user", "content": prompt}]
+        response = ""
+        for chunk in chat_client.stream_chat(provider, self.get_model(), context):
+            response += chunk
+            yield response
 
     def _handle_code_run_button_click(self, code):
         result = run_code(self.get_language(), code)
