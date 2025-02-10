@@ -115,7 +115,6 @@ class Interface:
         self.testcase_button = None
         self.testcase_output_box = None
         self.import_button = None
-        self.run_button2 = None
         self.spinner_html = None
 
     # ---------------- 公有接口-----------------#
@@ -179,7 +178,7 @@ class Interface:
                 gr.Markdown("### 🔧 大语言模型功能区")
 
             with gr.Row():
-                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=25)
+                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10)
                 self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
                 self.llm_text_output_box = gr.Markdown(visible=False, value="### 大模型输出区域")
                 self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
@@ -187,17 +186,13 @@ class Interface:
                 self.btn_code_generate = gr.Button(visible=False, value="代码生成", variant="primary")
                 self.btn_code_explain = gr.Button(visible=False, value="代码解释", variant="primary")
                 self.btn_code_augment = gr.Button(visible=False, value="代码增强", variant="primary")
-                self.btn_code_test = gr.Button(visible=False, value="代码测试", variant="primary")
 
             # 测试用例生成区域（默认隐藏）
-            with gr.Column(
-                    visible=False) as testcase_column:  # 由原来的 gr.Row 改为 gr.Column，命名由 testcase_row 改为 testcase_column
+            with gr.Column(visible=False) as testcase_column:  # 由原来的 gr.Row 改为 gr.Column，命名由 testcase_row 改为 testcase_column
 
                 with gr.Row():
                     with gr.Column(scale=1):
                         self.testcase_button = gr.Button("生成测试用例", variant="primary")
-                    with gr.Column(scale=1):
-                        self.testcase_run_button = gr.Button("运行代码", variant="primary")
                     with gr.Column(scale=1):
                         self.import_button = gr.Button("导入并运行", variant="secondary")
 
@@ -214,13 +209,7 @@ class Interface:
             self.import_button.click(
                 fn=self._handle_import_testcase,
                 inputs=self.testcase_output_box,
-                outputs=[self.editor, self.code_output_box]
-            )
-            # 就是运行
-            self.testcase_run_button.click(
-                fn=self._handle_run_button_click_visible,
-                inputs=self.editor,
-                outputs=self.code_output_box
+                outputs=[self.editor, self.code_execute_output_box]
             )
 
 
@@ -228,7 +217,7 @@ class Interface:
                 radio.select(
                     fn=self._handle_nav_selection,
                     inputs=radio,
-                    outputs=[*self.nav_radio_components, testcase_column, self.run_button, self.code_output_box], # TODO
+                    outputs=[*self.nav_radio_components, testcase_column],
                 )
 
             self.nav_radio_components[0].select(
@@ -261,30 +250,34 @@ class Interface:
                 outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box,
                          self.llm_code_output_box],
             )
+            self.nav_radio_components[3].select(
+                # "测试用例生成"选择按钮
+                fn=lambda x: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False),
+                              gr.update(visible=False)],
+                inputs=self.nav_radio_components[1],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box,
+                         self.llm_code_output_box],
+            )
 
             self.nav_radio_components[0].select(
                 # "代码生成"选择按钮
-                fn=lambda: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False),
-                            gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+                fn=lambda: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
             )
             self.nav_radio_components[1].select(
                 # "代码解释"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False),
-                            gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+                fn=lambda: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
             )
             self.nav_radio_components[2].select(
                 # "代码解释"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True),
-                            gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
             )
             self.nav_radio_components[3].select(
                 # "代码增强"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False),
-                            gr.update(visible=True)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
             )
 
             self.lang_selector.change(
@@ -364,8 +357,6 @@ class Interface:
             run_btn_update = gr.update(visible=True)
             code_output_update = gr.update(visible=True)
         radio_components_update.append(testcase_update)
-        radio_components_update.append(run_btn_update)
-        radio_components_update.append(code_output_update)
         return radio_components_update
 
     def _handle_lang_selection(self, selected_item: str):
@@ -522,13 +513,8 @@ class Interface:
         else:
             code = testcase_content.strip()
         # 自动运行代码
-        output = run_code(self.get_language(), code)
+        output = self._handle_code_run_button_click(code)
         # 返回两个更新：更新编辑器内容，更新并显示“代码输出”框
         return gr.update(value=code), gr.update(visible=True, value=output)
-
-    def _handle_run_button_click_visible(self, code):
-        output = run_code(self.get_language(), code)
-        return gr.update(visible=True, value=output)
-
 
 interface = Interface()
