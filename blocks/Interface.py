@@ -62,6 +62,9 @@ class Interface:
             'Python',
             'C',
             'C++',
+            'Java',
+            'Rust',
+            'Go'
         }
         self._model_list = [
             "DeepSeek-R1-Distill-Qwen-32B",
