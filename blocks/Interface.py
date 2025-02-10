@@ -1,5 +1,6 @@
 import gradio as gr
 from gradio_codeextend import CodeExtend as gr_CodeExtend
+from core.code_execution.run_code import run_code
 
 class Interface:
     def __init__(self):
@@ -138,6 +139,12 @@ class Interface:
                 inputs=self.model_selector,
             )
 
+            self.run_button.click(
+                fn=self._handle_run_button_click,
+                inputs=self.editor,
+                outputs=self.code_output_box
+            )
+
     def get_feature(self) -> str:
         """
         获取用户当前在左侧导航栏选择的功能名称（与界面上的文本相同，是中文）。
@@ -197,5 +204,9 @@ class Interface:
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
+
+    def _handle_run_button_click(self, code):
+        output = run_code(self.get_language(), code)
+        return output
 
 interface = Interface()
