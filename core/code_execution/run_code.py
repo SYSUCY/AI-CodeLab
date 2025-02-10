@@ -8,8 +8,9 @@ if CODE_RUNNER_IP is None:
 
 POST_URL = f"http://{CODE_RUNNER_IP}:8000/run_code/"
 
-def run_python(code):
-    data = {"language": "Python", "code": code}
+
+def run_code(language, code):
+    data = {"language": language, "code": code}
 
     response = requests.post(POST_URL, json=data)
 
@@ -18,17 +19,5 @@ def run_python(code):
     else:
         response.raise_for_status()
 
-language_map = {
-    "Python": run_python,
-}
-
-def run_code(language, code):
-    if language not in language_map:
-        raise ValueError(f"Language {language} is not supported")
-
-    try:
-        output = language_map[language](code)
-    except Exception as e:
-        return {"error": str(e)}
-
-    return output
+    # if language not in language_map:
+    #     raise ValueError(f"Language {language} is not supported")
