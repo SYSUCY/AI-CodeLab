@@ -206,7 +206,17 @@ class Interface:
         self.selected_model = selected_item
 
     def _handle_run_button_click(self, code):
-        output = run_code(self.get_language(), code)
-        return output
+        result = run_code(self.get_language(), code)
+
+        # 如果有错误，直接返回错误信息
+        if result.get('error'):
+            return result['error']
+
+        # 如果有标准输出且不是空字符串，返回标准输出
+        if result.get('stdout') not in (None, ''):
+            return result['stdout']
+
+        return None
+
 
 interface = Interface()

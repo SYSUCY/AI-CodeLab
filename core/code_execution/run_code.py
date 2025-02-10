@@ -1,46 +1,34 @@
-import subprocess
 import sys
-from core.code_execution.setup_docker import image_tag_map
+import os
+import requests
+
+CODE_RUNNER_IP = os.environ.get("AI_CODELAB_CODE_RUNNER_IP")
+if CODE_RUNNER_IP is None:
+    raise ValueError("Environment variable AI_CODELAB_CODE_RUNNER_IP is not set")
+
+POST_URL = f"http://{CODE_RUNNER_IP}:8000/run_code/"
+
+def run_python(code):
+    data = {"language": "Python", "code": code}
+
+    response = requests.post(POST_URL, json=data)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
+language_map = {
+    "Python": run_python,
+}
 
 def run_code(language, code):
-    image_tag = image_tag_map[language]
+    if language not in language_map:
+        raise ValueError(f"Language {language} is not supported")
 
-    output = None
-
-    if language == "Python":
-        output = run_python(code, image_tag)
-    else:
-        print("Error: Unsupported language to execute")
-        sys.exit(1)
+    try:
+        output = language_map[language](code)
+    except Exception as e:
+        return {"error": str(e)}
 
     return output
-
-# 注意捕获编译错误和运行时错误
-
-# executors for all languages
-
-def run_python(code, image):
-    try:
-        # 使用 docker run 命令启动容器并执行 Python 代码
-        result = subprocess.run(
-            ["docker", "run", "--rm", "-i", image, "python3", "-c", code],
-            capture_output=True,
-            text=True,
-            timeout=20  # 设置超时，可以根据需要调整
-        )
-
-        # 检查执行结果并返回
-        if result.returncode == 0:
-            return result.stdout  # 返回标准输出
-        else:
-            return f"Error: {result.stderr}"  # 返回错误信息
-
-    except subprocess.TimeoutExpired:
-        return "Error: Code execution timed out."
-    except Exception as e:
-        return f"Error running Python code in Docker: {e}"
-
-    except subprocess.TimeoutExpired:
-        print("Error: Code execution timed out.")
-    except Exception as e:
-        print(f"Error running Python code in Docker: {e}")
