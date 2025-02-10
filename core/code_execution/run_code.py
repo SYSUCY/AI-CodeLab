@@ -6,7 +6,7 @@ CODE_RUNNER_IP = os.environ.get("AI_CODELAB_CODE_RUNNER_IP")
 if CODE_RUNNER_IP is None:
     raise ValueError("Environment variable AI_CODELAB_CODE_RUNNER_IP is not set")
 
-POST_URL = f"http://{CODE_RUNNER_IP}:8000/run_code"
+POST_URL = f"http://{CODE_RUNNER_IP}:8000/run_code/"
 
 def run_python(code):
     data = {"language": "Python", "code": code}
