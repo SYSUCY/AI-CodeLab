@@ -73,6 +73,13 @@ class Interface:
             "qwen-plus",
             "qwen-turbo",
         ]
+        self._model_provider_map = {
+            "DeepSeek-R1-Distill-Qwen-32B": "gitee",
+            "qwen-max": "aliyuncs",
+            "qwen-plus": "aliyuncs",
+            "qwen-turbo": "aliyuncs",
+        }
+
 
         # 控件
         self.btn_config = None
@@ -82,7 +89,14 @@ class Interface:
         self.editor = None
         self.nav_radio_components = []  # 左侧导航栏的所有radio控件
         self.run_button = None
-        self.code_output_box = None
+        self.code_execute_output_box = None
+        
+        # LLM功能区控件
+        self.llm_text_input_box = None
+        self.llm_text_output_box = None
+        self.llm_code_input_box = None
+        self.llm_code_output_box = None
+        self.btn_llm_run = None
 
         # 存储当前界面状态
         self.selected_feature = ""
@@ -121,30 +135,18 @@ class Interface:
                         self.editor = gr_CodeExtend(lines=27, max_lines=27, interactive=True)
                     with gr.Row():
                         self.run_button = gr.Button(value="运行代码", variant="primary")
-                        self.code_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8, max_lines=8, show_label=True, show_copy_button=True)
+                        self.code_execute_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8, max_lines=8, show_label=True, show_copy_button=True)
             with gr.Row():
-                # toolbox
-                with gr.Column():
-                    gr.Markdown("### 🔧 功能区")
+                gr.Markdown("### 🔧 大语言模型功能区")
 
             with gr.Row():
-                with gr.Column(scale=9, min_width=800):
-                    with gr.Row():
-                        user_input_box = gr.Textbox("", label="📄 输入区", lines=25)
-                        code_input_box = gr.Code(lines=30)
-                    with gr.Row():
-                        btn_code_generate = gr.Button("生成代码", variant="primary", size="md")
-                    with gr.Row():
-                        output_code_box = gr.Code(lines=10)
+                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=25)
+                self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
+                self.llm_text_output_box = gr.Textbox(visible=False, interactive=False, lines=25)
+                self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
+            with gr.Row():
+                self.btn_llm_run = gr.Button(visible=False, variant="primary", size="md")
 
-            model_selector = self.get_model()
-            lang_selector = self.get_language()
-            btn_code_generate.click(
-                fn=self._handle_generate_code,
-                inputs=[user_input_box, code_input_box],
-                outputs=[output_code_box]
-            )
-            #test
 
             for radio in self.nav_radio_components:
                 radio.select(
@@ -152,6 +154,20 @@ class Interface:
                     inputs=radio,
                     outputs=self.nav_radio_components,
                 )
+
+            self.nav_radio_components[0].select(
+                # "代码生成"选择按钮
+                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)],
+                inputs=self.nav_radio_components[0],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
+            )
+
+            self.nav_radio_components[1].select(
+                # "代码解释"选择按钮
+                fn=lambda x: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=True), gr.update(visible=False)] if x=="生成代码说明" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)],
+                inputs=self.nav_radio_components[1],
+                outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
+            )
 
             self.lang_selector.change(
                 fn=self._handle_lang_selection,
@@ -167,7 +183,13 @@ class Interface:
             self.run_button.click(
                 fn=self._handle_run_button_click,
                 inputs=self.editor,
-                outputs=self.code_output_box
+                outputs=self.code_execute_output_box
+            )
+
+            self.btn_llm_run.click(
+                fn=self._handle_generate_code,
+                inputs=[self.llm_text_input_box, self.llm_code_input_box],
+                outputs=[self.llm_code_output_box]
             )
 
     def get_feature(self) -> str:
@@ -231,7 +253,7 @@ class Interface:
         self.selected_model = selected_item
 
 
-    def _handle_generate_code(user_input, code_input):
+    def _handle_generate_code(self, user_input, code_input):
         """
         处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
         :param user_input: Textbox 中的用户输入的自然语言描述
