@@ -1,5 +1,7 @@
 import gradio as gr
 from chat import ChatUI
+from gradio_codeextend import CodeExtend as gr_CodeExtend
+from core.code_execution.run_code import run_code
 
 class Interface:
     def __init__(self):
@@ -15,21 +17,32 @@ class Interface:
             'Python': 'python',
             'C': 'c',
             'C++': 'cpp',
+            'Go': 'go',
+            'Java': 'java',
             'R': 'r',
+            'Rust': 'rust',
 
-            # 标记语言/数据格式
-            'Markdown': 'markdown',
-            'JSON': 'json',
+            # Web前端
             'HTML': 'html',
             'CSS': 'css',
-            'YAML': 'yaml',
+            'SCSS': 'scss',
+            'Vue': 'vue',
+
+            # 标记语言/数据格式
             'Dockerfile': 'dockerfile',
+            'Liquid': 'liquid',
+            'Markdown': 'markdown',
+            'JSON': 'json',
+            'XML': 'xml',
+            'YAML': 'yaml',
+
 
             # 脚本语言
+            'Batch(Shell)': 'shell',
             'JavaScript': 'javascript',
-            'TypeScript': 'typescript',
-            'Shell': 'shell',
             'Jinja2': 'jinja2',
+            'PHP': 'php',
+            'TypeScript': 'typescript',
 
             # SQL及其方言
             'SQL': 'sql',
@@ -46,6 +59,14 @@ class Interface:
             'Spark SQL': 'sql-sparkSQL',
             'Esper EPL': 'sql-esper'
         }
+        self._lang_support_execution = {
+            'Python',
+            'C',
+            'C++',
+            'Java',
+            'Rust',
+            'Go'
+        }
         self._model_list = [
             "DeepSeek-R1-Distill-Qwen-32B",
             "qwen-max",
@@ -60,6 +81,8 @@ class Interface:
         self.model_selector = None
         self.editor = None
         self.nav_radio_components = []  # 左侧导航栏的所有radio控件
+        self.run_button = None
+        self.code_output_box = None
 
         # 存储当前界面状态
         self.selected_feature = ""
@@ -85,7 +108,7 @@ class Interface:
 
                     self.btn_config = gr.Button("⚙️ 设置", size="md")
 
-                    self.btn_upload = gr.Button("上传代码文件", variant="primary", size="md")
+                    self.btn_upload = gr.Button("上传代码文件", size="md")
 
                 with gr.Column(scale=9, min_width=800):
                     with gr.Row():
@@ -94,7 +117,11 @@ class Interface:
                         self.model_selector = gr.Dropdown(label="请选择使用的模型", choices=self._model_list,
                                                           interactive=True, filterable=True, value=None)
                     # code editor
-                    self.editor = gr.Code(lines=30, max_lines=30, interactive=True)
+                    with gr.Row():
+                        self.editor = gr_CodeExtend(lines=27, max_lines=27, interactive=True)
+                    with gr.Row():
+                        self.run_button = gr.Button(value="运行代码", variant="primary")
+                        self.code_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8, max_lines=8, show_label=True, show_copy_button=True)
             with gr.Row():
                 # toolbox
                 with gr.Column():
@@ -113,7 +140,7 @@ class Interface:
             model_selector = self.get_model()
             lang_selector = self.get_language()
             btn_code_generate.click(
-                fn=self.handle_generate_code,
+                fn=self._handle_generate_code,
                 inputs=[user_input_box, code_input_box],
                 outputs=[output_code_box]
             )
@@ -129,12 +156,18 @@ class Interface:
             self.lang_selector.change(
                 fn=self._handle_lang_selection,
                 inputs=self.lang_selector,
-                outputs=self.editor,
+                outputs=[self.editor, self.run_button],
             )
 
             self.model_selector.change(
                 fn=self._handle_model_selection,
                 inputs=self.model_selector,
+            )
+
+            self.run_button.click(
+                fn=self._handle_run_button_click,
+                inputs=self.editor,
+                outputs=self.code_output_box
             )
 
     def get_feature(self) -> str:
@@ -185,12 +218,20 @@ class Interface:
     def _handle_lang_selection(self, selected_item: str):
         self.selected_language = selected_item
 
-        return gr.update(language=self._lang_map[selected_item])
+        code_update = gr.update(language=self._lang_map[selected_item])
+
+        if self.get_language() in self._lang_support_execution:
+            run_btn_update = gr.update(interactive=True, value="运行代码")
+        else:
+            run_btn_update = gr.update(interactive=False, value="该语言暂不支持在线运行")
+
+        return code_update, run_btn_update
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
 
-    def handle_generate_code(user_input, code_input):
+
+    def _handle_generate_code(user_input, code_input):
         """
         处理生成代码按钮的点击事件，根据导航栏选择不同的生成逻辑
         :param user_input: Textbox 中的用户输入的自然语言描述
@@ -234,6 +275,19 @@ class Interface:
             final_code = response  # 如果没有找到，返回原始响应（可能需要处理错误情况）
 
         return final_code
+
+    def _handle_run_button_click(self, code):
+        result = run_code(self.get_language(), code)
+
+        # 如果有错误，直接返回错误信息
+        if result.get('error'):
+            return result['error']
+
+        # 如果有标准输出且不是空字符串，返回标准输出
+        if result.get('stdout') not in (None, ''):
+            return result['stdout']
+
+        return None
 
 chat_ui = ChatUI()
 interface = Interface()
