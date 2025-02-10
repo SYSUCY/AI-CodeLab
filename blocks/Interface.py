@@ -105,6 +105,8 @@ class Interface:
 
         self.btn_code_generate = None
         self.btn_code_augment = None
+        self.btn_code_explain = None
+        self.btn_code_test = None
 
         # 存储当前界面状态
         self.selected_feature = ""
@@ -151,11 +153,13 @@ class Interface:
             with gr.Row():
                 self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=25)
                 self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
-                self.llm_text_output_box = gr.Markdown("## 大模型输出区域")
+                self.llm_text_output_box = gr.Markdown(visible=False, value="### 大模型输出区域")
                 self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
             with gr.Row():
-                self.btn_code_generate = gr.Button(value="代码生成", variant="primary")
-                self.btn_code_augment = gr.Button(value="代码增强", variant="primary")
+                self.btn_code_generate = gr.Button(visible=False, value="代码生成", variant="primary")
+                self.btn_code_explain = gr.Button(visible=False, value="代码解释", variant="primary")
+                self.btn_code_augment = gr.Button(visible=False, value="代码增强", variant="primary")
+                self.btn_code_test = gr.Button(visible=False, value="代码测试", variant="primary")
 
 
             for radio in self.nav_radio_components:
@@ -167,7 +171,7 @@ class Interface:
 
             self.nav_radio_components[0].select(
                 # "代码生成"选择按钮
-                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True), gr.update(visible=True, value="生成代码")],
+                fn=lambda x: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)] if x=="从描述生成" else [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)],
                 inputs=self.nav_radio_components[0],
                 outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
             )
@@ -182,6 +186,27 @@ class Interface:
                 fn=lambda x: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
                 inputs=self.nav_radio_components[1],
                 outputs=[self.llm_text_input_box, self.llm_code_input_box, self.llm_text_output_box, self.llm_code_output_box],
+            )
+
+            self.nav_radio_components[0].select(
+                # "代码生成"选择按钮
+                fn=lambda : [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+            )
+            self.nav_radio_components[1].select(
+                # "代码解释"选择按钮
+                fn=lambda : [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+            )
+            self.nav_radio_components[2].select(
+                # "代码解释"选择按钮
+                fn=lambda : [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
+            )
+            self.nav_radio_components[3].select(
+                # "代码增强"选择按钮
+                fn=lambda : [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment, self.btn_code_test],
             )
 
             self.lang_selector.change(
