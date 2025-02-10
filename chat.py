@@ -115,6 +115,7 @@ class ChatClient:
             model=model,
             messages=context,
             stream=True,
+            timeout=60,
             **params
         )
         for chunk in response:
@@ -130,6 +131,7 @@ class ChatClient:
         # for i in range(10):
         #     yield f"Chunk {i}"
         #     time.sleep(0.1)
+
 
 
 # 这个这是测试界面，方便各位查看使用案例
@@ -194,12 +196,12 @@ class ChatUI:
 
         return demo
 
+
 def main():
     """
     主函数：启动Gradio界面进行测试
     注意：请勿在生产环境中直接暴露API密钥
     """
-
     chat_ui = ChatUI()
     demo = chat_ui.create_interface()
     demo.queue()
