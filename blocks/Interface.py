@@ -179,9 +179,9 @@ class Interface:
 
             with gr.Row():
                 self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10, max_lines=10)
-                self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
+                self.llm_code_input_box = gr_CodeExtend(visible=False, interactive=True, lines=30, max_lines=30)
                 self.llm_text_output_box = gr.Markdown(visible=False, value="### 大模型输出区域")
-                self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
+                self.llm_code_output_box = gr_CodeExtend(visible=False, interactive=False, lines=30, max_lines=30)
             with gr.Row():
                 self.btn_code_generate = gr.Button(visible=False, value="代码生成", variant="primary")
                 self.btn_code_explain = gr.Button(visible=False, value="代码解释", variant="primary")
@@ -285,7 +285,7 @@ class Interface:
             self.lang_selector.change(
                 fn=self._handle_lang_selection,
                 inputs=self.lang_selector,
-                outputs=[self.editor, self.run_button],
+                outputs=[self.editor, self.llm_code_input_box, self.llm_code_output_box, self.run_button],
             )
             self.model_selector.change(
                 fn=self._handle_model_selection,
@@ -383,7 +383,7 @@ class Interface:
         else:
             run_btn_update = gr.update(interactive=False, value="该语言暂不支持在线运行")
 
-        return code_update, run_btn_update
+        return code_update, code_update, code_update, run_btn_update
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
