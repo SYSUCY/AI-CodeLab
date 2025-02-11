@@ -178,7 +178,7 @@ class Interface:
                 gr.Markdown("### 🔧 大语言模型功能区")
 
             with gr.Row():
-                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10)
+                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10, max_lines=10)
                 self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
                 self.llm_text_output_box = gr.Markdown(visible=False, value="### 大模型输出区域")
                 self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
