@@ -157,8 +157,6 @@ class Interface:
                         )
                         self.nav_radio_components.append(radio)
 
-                    self.btn_config = gr.Button("⚙️ 设置", size="md")
-
                     self.btn_upload = gr.Button("上传代码文件", size="md")
 
                 with gr.Column(scale=9, min_width=800):
@@ -169,7 +167,7 @@ class Interface:
                                                           interactive=True, filterable=True, value=None)
                     # code editor
                     with gr.Row():
-                        self.editor = gr_CodeExtend(lines=27, max_lines=27, interactive=True)
+                        self.editor = gr_CodeExtend(lines=24, max_lines=24, interactive=True)
                     with gr.Row():
                         self.run_button = gr.Button(value="运行代码", variant="primary")
                         self.code_execute_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8,
