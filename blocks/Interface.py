@@ -2,9 +2,9 @@ from cProfile import label
 import re
 import gradio as gr
 from pydantic.v1.utils import get_model
-from augment import generate_prompt
-from chat import ChatUI
-from chat import ChatClient
+from core.llm.augment import generate_prompt
+from core.llm.chat import ChatUI
+from core.llm.chat import ChatClient
 from gradio_codeextend import CodeExtend as gr_CodeExtend
 from core.code_execution.run_code import run_code
 
@@ -157,8 +157,6 @@ class Interface:
                         )
                         self.nav_radio_components.append(radio)
 
-                    self.btn_config = gr.Button("⚙️ 设置", size="md")
-
                     self.btn_upload = gr.Button("上传代码文件", size="md")
 
                 with gr.Column(scale=9, min_width=800):
@@ -169,7 +167,7 @@ class Interface:
                                                           interactive=True, filterable=True, value=None)
                     # code editor
                     with gr.Row():
-                        self.editor = gr_CodeExtend(lines=27, max_lines=27, interactive=True)
+                        self.editor = gr_CodeExtend(lines=24, max_lines=24, interactive=True)
                     with gr.Row():
                         self.run_button = gr.Button(value="运行代码", variant="primary")
                         self.code_execute_output_box = gr.Textbox(label="代码输出", interactive=False, lines=8,
@@ -178,10 +176,10 @@ class Interface:
                 gr.Markdown("### 🔧 大语言模型功能区")
 
             with gr.Row():
-                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10)
-                self.llm_code_input_box = gr.Code(visible=False, interactive=True, lines=30, max_lines=30)
+                self.llm_text_input_box = gr.Textbox(visible=False, interactive=True, label="📄 输入区", lines=10, max_lines=10)
+                self.llm_code_input_box = gr_CodeExtend(visible=False, interactive=True, lines=30, max_lines=30)
                 self.llm_text_output_box = gr.Markdown(visible=False, value="### 大模型输出区域")
-                self.llm_code_output_box = gr.Code(visible=False, interactive=False, lines=30, max_lines=30)
+                self.llm_code_output_box = gr_CodeExtend(visible=False, interactive=False, lines=30, max_lines=30)
             with gr.Row():
                 self.btn_code_generate = gr.Button(visible=False, value="代码生成", variant="primary")
                 self.btn_code_explain = gr.Button(visible=False, value="代码解释", variant="primary")
@@ -285,7 +283,7 @@ class Interface:
             self.lang_selector.change(
                 fn=self._handle_lang_selection,
                 inputs=self.lang_selector,
-                outputs=[self.editor, self.run_button],
+                outputs=[self.editor, self.llm_code_input_box, self.llm_code_output_box, self.run_button],
             )
             self.model_selector.change(
                 fn=self._handle_model_selection,
@@ -383,7 +381,7 @@ class Interface:
         else:
             run_btn_update = gr.update(interactive=False, value="该语言暂不支持在线运行")
 
-        return code_update, run_btn_update
+        return code_update, code_update, code_update, run_btn_update
 
     def _handle_model_selection(self, selected_item: str):
         self.selected_model = selected_item
@@ -397,8 +395,12 @@ class Interface:
         """
         prompt = ""
         method = interface.get_feature()
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
 
         if method == "从描述生成":
             prompt = f"以下是自然语言描述:\n" \
@@ -437,8 +439,13 @@ class Interface:
         return final_code
 
     def _handle_code_explain(self, code):
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
+
         prompt = f"请解释以下{lang_selection}代码：\n\n{code}"
 
         # 调用 ChatClient 进行流式生成
@@ -451,8 +458,12 @@ class Interface:
             yield response
 
     def _handle_code_comment(self, code):
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
 
         prompt = f"以下是一段{lang_selection}代码，请为其生成符合开发规范的注释，注释内容应包括：\n" \
                  f"1. 每个函数的说明文档，描述其功能及输入输出参数，以下是一个格式示例：\n" \
@@ -492,23 +503,34 @@ class Interface:
         return final_code
 
     def _handle_code_augment(self, code):
+        lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
+
         chat_client = ChatClient()
 
-        prompt = generate_prompt(self.get_feature(), self.get_language(), code)
+        prompt = generate_prompt(self.get_feature(), lang_selection, code)
 
         # 根据模型自动选择提供商
-        provider = self._model_provider_map.get(self.get_model())
+        provider = self._model_provider_map.get(model_selection)
         if not provider:
-            raise ValueError(f"不支持的模型: {self.get_model()}")
+            raise ValueError(f"不支持的模型: {model_selection}")
 
         context = [{"role": "user", "content": prompt}]
         response = ""
-        for chunk in chat_client.stream_chat(provider, self.get_model(), context):
+        for chunk in chat_client.stream_chat(provider, model_selection, context):
             response += chunk
             yield response
 
     def _handle_code_run_button_click(self, code):
-        result = run_code(self.get_language(), code)
+        lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+
+        result = run_code(lang_selection, code)
 
         # 如果有错误，直接返回错误信息
         if result.get('error'):
@@ -560,7 +582,7 @@ class Interface:
             f"最后把一定要输出测试用例、目标代码、调用测试用例的命令和通过测试的提醒！确保让用户可以直接运行"
             f"所有都要用中文注释，但是通过的提醒需要用英文"
         )
-        from chat import ChatUI
+        from core.llm.chat import ChatUI
         chat_ui = ChatUI()
         generator = chat_ui.gradio_interface(model, prompt)
         result = ""
