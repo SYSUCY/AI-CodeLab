@@ -104,7 +104,7 @@ class Interface:
         self.btn_code_generate = None
         self.btn_code_augment = None
         self.btn_code_explain = None
-        self.btn_code_test = None
+        self.btn_code_comment = None
 
         # 存储当前界面状态
         self.selected_feature = ""
@@ -185,6 +185,7 @@ class Interface:
             with gr.Row():
                 self.btn_code_generate = gr.Button(visible=False, value="代码生成", variant="primary")
                 self.btn_code_explain = gr.Button(visible=False, value="代码解释", variant="primary")
+                self.btn_code_comment = gr.Button(visible=False, value="生成注释", variant="primary")
                 self.btn_code_augment = gr.Button(visible=False, value="代码增强", variant="primary")
 
             # 测试用例生成区域（默认隐藏）
@@ -217,7 +218,7 @@ class Interface:
                 radio.select(
                     fn=self._handle_nav_selection,
                     inputs=radio,
-                    outputs=[*self.nav_radio_components, testcase_column],
+                    outputs=[*self.nav_radio_components, testcase_column, self.llm_text_output_box, self.llm_code_output_box],
                 )
 
             self.nav_radio_components[0].select(
@@ -261,23 +262,24 @@ class Interface:
 
             self.nav_radio_components[0].select(
                 # "代码生成"选择按钮
-                fn=lambda: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
+                fn=lambda: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_comment, self.btn_code_augment],
             )
             self.nav_radio_components[1].select(
                 # "代码解释"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
+                fn=lambda x: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)] if x=="生成代码说明" else [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)],
+                inputs=self.nav_radio_components[1],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_comment, self.btn_code_augment],
             )
             self.nav_radio_components[2].select(
-                # "代码解释"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
+                # "代码增强"选择按钮
+                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_comment, self.btn_code_augment],
             )
             self.nav_radio_components[3].select(
-                # "代码增强"选择按钮
-                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)],
-                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_augment],
+                # "代码测试"选择按钮
+                fn=lambda: [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)],
+                outputs=[self.btn_code_generate, self.btn_code_explain, self.btn_code_comment, self.btn_code_augment],
             )
 
             self.lang_selector.change(
@@ -300,6 +302,16 @@ class Interface:
                 fn=self._handle_generate_code,
                 inputs=[self.llm_text_input_box, self.llm_code_input_box],
                 outputs=self.llm_code_output_box
+            )
+            self.btn_code_explain.click(
+                fn=self._handle_code_explain,
+                inputs=self.llm_code_input_box,
+                outputs=self.llm_text_output_box,
+            )
+            self.btn_code_comment.click(
+                fn=self._handle_code_comment,
+                inputs=self.llm_code_input_box,
+                outputs=self.llm_code_output_box,
             )
             self.btn_code_augment.click(
                 fn=self._handle_code_augment,
@@ -357,6 +369,8 @@ class Interface:
             run_btn_update = gr.update(visible=True)
             code_output_update = gr.update(visible=True)
         radio_components_update.append(testcase_update)
+        radio_components_update.append(gr.update(value="")) # llm_text_output_box
+        radio_components_update.append(gr.update(value="")) # llm_code_output_box
         return radio_components_update
 
     def _handle_lang_selection(self, selected_item: str):
@@ -402,7 +416,62 @@ class Interface:
                      f"请确保代码被标记为代码块，并且其外部标记如下:\n" \
                      f"<code> ... </code>"
 
-        # 调用 ChatUI 进行流式生成
+        # 调用 ChatClient 进行流式生成
+        chat_client = ChatClient()
+        context = [{"role": "user", "content": prompt}]
+
+        response = ""
+        for chunk in chat_client.stream_chat(self._model_provider_map[model_selection], model_selection, context):
+            response += chunk
+
+        # 提取 <code> 和 </code> 标签之间的部分作为最终返回值
+        start_index = response.find("<code>") + len("<code>")
+        end_index = response.find("</code>", start_index)
+
+        # 如果找到了 <code> 和 </code>，返回其中的内容
+        if start_index != -1 and end_index != -1:
+            final_code = response[start_index:end_index]
+        else:
+            final_code = response  # 如果没有找到，返回原始响应（可能需要处理错误情况）
+
+        return final_code
+
+    def _handle_code_explain(self, code):
+        model_selection = interface.get_model()
+        lang_selection = interface.get_language()
+        prompt = f"请解释以下{lang_selection}代码：\n\n{code}"
+
+        # 调用 ChatClient 进行流式生成
+        chat_client = ChatClient()
+        context = [{"role": "user", "content": prompt}]
+
+        response = ""
+        for chunk in chat_client.stream_chat(self._model_provider_map[model_selection], model_selection, context):
+            response += chunk
+            yield response
+
+    def _handle_code_comment(self, code):
+        model_selection = interface.get_model()
+        lang_selection = interface.get_language()
+
+        prompt = f"以下是一段{lang_selection}代码，请为其生成符合开发规范的注释，注释内容应包括：\n" \
+                 f"1. 每个函数的说明文档，描述其功能及输入输出参数，以下是一个格式示例：\n" \
+                 f"\"\"\"\n" \
+                 f"Gradio接口函数，处理用户输入并返回流式响应\n" \
+                 f"Args:\n" \
+                 f"    model: 选择的模型名称\n" \
+                 f"    user_input: 用户输入的文本\n" \
+                 f"Returns:\n" \
+                 f"    Generator[str, None, None]: 生成器，用于流式输出响应\n" \
+                 f"\"\"\"\n" \
+                 f"2. 对于代码中的关键逻辑或复杂部分，添加必要的行内注释\n"\
+                 f"注意保持用户给定的代码不变，并且使用特定的标记包裹代码部分。\n" \
+                 f"请确保代码被标记为代码块，并且其外部标记如下:\n" \
+                 f"<code> ... </code>\n" \
+                 f"以下是用户给出的代码：\n" \
+                 f"{code}"\
+
+        # 调用 ChatClient 进行流式生成
         chat_client = ChatClient()
         context = [{"role": "user", "content": prompt}]
 
