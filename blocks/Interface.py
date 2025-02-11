@@ -2,9 +2,9 @@ from cProfile import label
 import re
 import gradio as gr
 from pydantic.v1.utils import get_model
-from augment import generate_prompt
-from chat import ChatUI
-from chat import ChatClient
+from core.llm.augment import generate_prompt
+from core.llm.chat import ChatUI
+from core.llm.chat import ChatClient
 from gradio_codeextend import CodeExtend as gr_CodeExtend
 from core.code_execution.run_code import run_code
 
@@ -560,7 +560,7 @@ class Interface:
             f"最后把一定要输出测试用例、目标代码、调用测试用例的命令和通过测试的提醒！确保让用户可以直接运行"
             f"所有都要用中文注释，但是通过的提醒需要用英文"
         )
-        from chat import ChatUI
+        from core.llm.chat import ChatUI
         chat_ui = ChatUI()
         generator = chat_ui.gradio_interface(model, prompt)
         result = ""
