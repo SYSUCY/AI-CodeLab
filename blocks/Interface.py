@@ -395,8 +395,12 @@ class Interface:
         """
         prompt = ""
         method = interface.get_feature()
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
 
         if method == "从描述生成":
             prompt = f"以下是自然语言描述:\n" \
@@ -435,8 +439,13 @@ class Interface:
         return final_code
 
     def _handle_code_explain(self, code):
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
+
         prompt = f"请解释以下{lang_selection}代码：\n\n{code}"
 
         # 调用 ChatClient 进行流式生成
@@ -449,8 +458,12 @@ class Interface:
             yield response
 
     def _handle_code_comment(self, code):
-        model_selection = interface.get_model()
         lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
 
         prompt = f"以下是一段{lang_selection}代码，请为其生成符合开发规范的注释，注释内容应包括：\n" \
                  f"1. 每个函数的说明文档，描述其功能及输入输出参数，以下是一个格式示例：\n" \
@@ -490,23 +503,34 @@ class Interface:
         return final_code
 
     def _handle_code_augment(self, code):
+        lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+        model_selection = interface.get_model()
+        if model_selection == "":
+            raise gr.Error("请选择模型")
+
         chat_client = ChatClient()
 
-        prompt = generate_prompt(self.get_feature(), self.get_language(), code)
+        prompt = generate_prompt(self.get_feature(), lang_selection, code)
 
         # 根据模型自动选择提供商
-        provider = self._model_provider_map.get(self.get_model())
+        provider = self._model_provider_map.get(model_selection)
         if not provider:
-            raise ValueError(f"不支持的模型: {self.get_model()}")
+            raise ValueError(f"不支持的模型: {model_selection}")
 
         context = [{"role": "user", "content": prompt}]
         response = ""
-        for chunk in chat_client.stream_chat(provider, self.get_model(), context):
+        for chunk in chat_client.stream_chat(provider, model_selection, context):
             response += chunk
             yield response
 
     def _handle_code_run_button_click(self, code):
-        result = run_code(self.get_language(), code)
+        lang_selection = interface.get_language()
+        if lang_selection == "":
+            raise gr.Error("请选择编程语言")
+
+        result = run_code(lang_selection, code)
 
         # 如果有错误，直接返回错误信息
         if result.get('error'):
