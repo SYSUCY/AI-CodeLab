@@ -157,8 +157,6 @@ class Interface:
                         )
                         self.nav_radio_components.append(radio)
 
-                    self.btn_upload = gr.Button("上传代码文件", size="md")
-
                 with gr.Column(scale=9, min_width=800):
                     with gr.Row():
                         self.lang_selector = gr.Dropdown(label="请选择编程语言", choices=list(self._lang_map.keys()),
@@ -402,7 +400,10 @@ class Interface:
         if model_selection == "":
             raise gr.Error("请选择模型")
 
+
         if method == "从描述生成":
+            if user_input == "":
+                raise gr.Error("输入为空!")
             prompt = f"以下是自然语言描述:\n" \
                      f"{user_input}\n" \
                      f"根据上述描述，生成相应的{lang_selection}代码，并且使用特定的标记包裹代码部分。\n" \
@@ -410,6 +411,8 @@ class Interface:
                      f"<code> ... </code>"
 
         elif method == "代码补全":
+            if code_input == "":
+                raise gr.Error("输入的代码为空!")
             prompt = f"以下是自然语言描述:\n" \
                      f"{user_input}\n" \
                      f"以下是待补全的代码:\n" \
@@ -445,6 +448,8 @@ class Interface:
         model_selection = interface.get_model()
         if model_selection == "":
             raise gr.Error("请选择模型")
+        if code == "":
+            raise gr.Error("输入的代码为空!")
 
         prompt = f"请解释以下{lang_selection}代码：\n\n{code}"
 
@@ -464,6 +469,8 @@ class Interface:
         model_selection = interface.get_model()
         if model_selection == "":
             raise gr.Error("请选择模型")
+        if code == "":
+            raise gr.Error("输入的代码为空!")
 
         prompt = f"以下是一段{lang_selection}代码，请为其生成符合开发规范的注释，注释内容应包括：\n" \
                  f"1. 每个函数的说明文档，描述其功能及输入输出参数，以下是一个格式示例：\n" \
@@ -509,6 +516,8 @@ class Interface:
         model_selection = interface.get_model()
         if model_selection == "":
             raise gr.Error("请选择模型")
+        if code == "":
+            raise gr.Error("输入的代码为空!")
 
         chat_client = ChatClient()
 
@@ -529,6 +538,9 @@ class Interface:
         lang_selection = interface.get_language()
         if lang_selection == "":
             raise gr.Error("请选择编程语言")
+
+        if code == "":
+            raise gr.Error("输入的代码为空!")
 
         result = run_code(lang_selection, code)
 
