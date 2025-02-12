@@ -157,8 +157,6 @@ class Interface:
                         )
                         self.nav_radio_components.append(radio)
 
-                    self.btn_upload = gr.Button("上传代码文件", size="md")
-
                 with gr.Column(scale=9, min_width=800):
                     with gr.Row():
                         self.lang_selector = gr.Dropdown(label="请选择编程语言", choices=list(self._lang_map.keys()),
